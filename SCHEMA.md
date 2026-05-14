@@ -15,23 +15,6 @@ used by the Personal Ledger project.
 
 ---
 
-# Schema Documentation
-
-This document describes the current database schema and accounting conventions
-used by the Personal Ledger project.
-
----
-
-# Core Principles
-
-- Double-entry bookkeeping
-- Local-first architecture
-- SQLite as source of truth
-- Analytical flexibility
-- Append-oriented ledger mindset
-
----
-
 # Accounting Rules
 
 Positive amounts represent debits.
