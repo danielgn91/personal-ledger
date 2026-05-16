@@ -1,5 +1,6 @@
-from app.database import create_db_and_tables
+from app.database import LedgerDatabase
 
-create_db_and_tables()
+db = LedgerDatabase("data/test_ledger.db")
+db.create_tables()
 
 print("Database initialized.")
