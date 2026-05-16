@@ -1,11 +1,6 @@
 from datetime import date, datetime, timezone
 from sqlmodel import SQLModel, Field
-from enum import Enum
-
-class TransactionStatus(str, Enum):
-    PLANNED = "planned"
-    POSTED = "posted"
-    CANCELLED = "cancelled"
+from app.models.enums import TransactionStatus
 
 class Transaction(SQLModel, table=True):
     """

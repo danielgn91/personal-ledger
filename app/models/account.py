@@ -1,5 +1,5 @@
 from sqlmodel import SQLModel, Field
-
+from app.models.enums import (AccountType, NormalBalance)
 
 class Account(SQLModel, table=True):
     """
@@ -55,7 +55,7 @@ class Account(SQLModel, table=True):
         description="Human-readable account name."
     )
 
-    account_type: str = Field(
+    account_type: AccountType = Field(
         index=True,
         description=(
             "Structural account type. "
@@ -64,7 +64,7 @@ class Account(SQLModel, table=True):
         )
     )
 
-    normal_balance: str = Field(
+    normal_balance: NormalBalance = Field(
         description=(
             "Natural balance side of the account. "
             "Expected values: 'debit' or 'credit'."
