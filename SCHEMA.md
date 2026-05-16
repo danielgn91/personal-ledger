@@ -99,9 +99,23 @@ Examples:
 | id | INTEGER | Primary key |
 | transaction_date | DATE | Competence/accounting date |
 | description | TEXT | Human-readable description |
+| status | TEXT | planned, posted, cancelled |
 | created_at | DATETIME | Creation timestamp |
 
 ---
+Transactions have a lifecycle status:
+
+- `planned`
+  - Expected or scheduled transaction.
+  - Does not affect real balances.
+
+- `posted`
+  - Confirmed transaction.
+  - Affects balances and financial reports.
+
+- `cancelled`
+  - Invalidated or abandoned transaction.
+  - Preserved for historical/audit purposes.
 
 ## Entry
 
@@ -169,6 +183,15 @@ to avoid rounding and precision issues.
 
 The real account hierarchy is defined by `parent_id`,
 not by account codes.
+
+---
+
+## Transaction Lifecycle
+
+Transactions may exist before becoming financially effective.
+
+Only transactions with status `posted`
+affect real balances and accounting reports.
 
 ---
 

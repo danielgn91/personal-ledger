@@ -1,7 +1,11 @@
 from datetime import date, datetime, timezone
-
 from sqlmodel import SQLModel, Field
+from enum import Enum
 
+class TransactionStatus(str, Enum):
+    PLANNED = "planned"
+    POSTED = "posted"
+    CANCELLED = "cancelled"
 
 class Transaction(SQLModel, table=True):
     """
@@ -44,4 +48,8 @@ class Transaction(SQLModel, table=True):
     created_at: datetime = Field(
         default_factory=lambda: datetime.now(timezone.utc),
         description="Timestamp indicating when the transaction was created."
+    )
+
+    status: TransactionStatus = Field(
+        default=TransactionStatus.POSTED
     )
