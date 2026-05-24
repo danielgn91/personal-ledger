@@ -41,19 +41,19 @@ def test_min_entries():
     with pytest.raises(InvalidTransactionError, match="Transaction must contain at least 2 entries."):
         validate_transaction_balance(entries)
 
-def test_account_not_found(session, accounts):
+def test_account_not_found(ledger_db, accounts):
     entries = [
         Posting(account_id=999, amount=100),
         Posting(account_id=accounts["cash"].id, amount=-100),
     ]
-
+    session = ledger_db.get_session()
     with pytest.raises(InvalidTransactionError, ):
         validate_transaction_accounts(session, entries)
 
 def test_account_not_postable(ledger_db, accounts):
 
     entries = [
-        Posting(account_id=accounts["not_postable"].id, amount=100),
+        Posting(account_id=accounts["non_postable"].id, amount=100),
         Posting(account_id=accounts["revenue"].id, amount=-100),
     ]
 
