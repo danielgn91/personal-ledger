@@ -10,9 +10,9 @@ from app.services.transaction_service import (
                 )
 from app.models.enums import TransactionStatus
 
-def test_create_transaction_success(ledger_db, accounts):
+def test_create_transaction_success(session, accounts):
     tx = create_transaction(
-        ledger_db=ledger_db,
+        session=session,
         transaction_date=date.today(),
         description="salary",
         entries=[
@@ -41,32 +41,31 @@ def test_min_entries():
     with pytest.raises(InvalidTransactionError, match="Transaction must contain at least 2 entries."):
         validate_transaction_balance(entries)
 
-def test_account_not_found(ledger_db, accounts):
+def test_account_not_found(session, accounts):
     entries = [
         Posting(account_id=999, amount=100),
         Posting(account_id=accounts["cash"].id, amount=-100),
     ]
-    session = ledger_db.get_session()
     with pytest.raises(InvalidTransactionError, ):
         validate_transaction_accounts(session, entries)
 
-def test_account_not_postable(ledger_db, accounts):
+def test_account_not_postable(session, accounts):
 
     entries = [
         Posting(account_id=accounts["non_postable"].id, amount=100),
         Posting(account_id=accounts["revenue"].id, amount=-100),
     ]
 
-    with ledger_db.get_session() as session:
-        with pytest.raises(InvalidTransactionError, match="Transactions must have all entries in postable accounts"):
-            validate_transaction_accounts(session, entries)
+    
+    with pytest.raises(InvalidTransactionError, match="Transactions must have all entries in postable accounts"):
+        validate_transaction_accounts(session, entries)
 
-def test_account_not_active(ledger_db, accounts):
+def test_account_not_active(session, accounts):
     entries = [
         Posting(account_id=accounts["inactive"].id, amount=100),
         Posting(account_id=accounts["revenue"].id, amount=-100),
     ]
 
-    with ledger_db.get_session() as session:
-        with pytest.raises(InvalidTransactionError, match="Transactions must have all entries in active accounts"):
-            validate_transaction_accounts(session, entries)
+    
+    with pytest.raises(InvalidTransactionError, match="Transactions must have all entries in active accounts"):
+        validate_transaction_accounts(session, entries)

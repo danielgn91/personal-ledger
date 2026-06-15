@@ -1,8 +1,6 @@
 from datetime import date
-from app.database import LedgerDatabase
 from sqlmodel import Session
-from app.models import Transaction, TransactionStatus, Entry
-from app.repositories.account_repository import get_account_by_id
+from app.models import Transaction, TransactionStatus, Entry, Account
 from app.schemas.transactions import Posting
 
 class UnbalancedTransactionError(Exception):
@@ -37,7 +35,7 @@ def validate_transaction_accounts(
     entries: list[Posting],
 ) -> None:
     for entry in entries:
-        entry_account = get_account_by_id(session,entry.account_id)
+        entry_account = session.get(Account, entry.account_id)
         if entry_account is None: raise InvalidTransactionError(
             "Transactions must have all entries in existing accounts"
         )
@@ -50,7 +48,7 @@ def validate_transaction_accounts(
         
 
 def create_transaction(
-    ledger_db: LedgerDatabase,
+    session: Session,
     transaction_date: date,
     description: str,
     entries: list[Posting],
@@ -82,37 +80,33 @@ def create_transaction(
     #entries = [entry for entry in entries if entry.amount != 0]
 
     validate_transaction_balance(entries)
-    
 
+    validate_transaction_accounts(session, entries)
 
-    with ledger_db.get_session() as session:
+    transaction = Transaction(
+        transaction_date=transaction_date,
+        description=description,
+        status=status,
+    )
 
-        validate_transaction_accounts(session, entries)
+    session.add(transaction)
 
-        transaction = Transaction(
-            transaction_date=transaction_date,
-            description=description,
-            status=status,
+    # Generates transaction.id before commit
+    session.flush()
+
+    for entry_data in entries:
+
+        entry = Entry(
+            transaction_id=transaction.id,
+            account_id=entry_data.account_id,
+            amount=entry_data.amount,
+            description=entry_data.description,
         )
 
-        session.add(transaction)
+        session.add(entry)
 
-        # Generates transaction.id before commit
-        session.flush()
+    #session.commit()
 
-        for entry_data in entries:
+    #session.refresh(transaction)
 
-            entry = Entry(
-                transaction_id=transaction.id,
-                account_id=entry_data.account_id,
-                amount=entry_data.amount,
-                description=entry_data.description,
-            )
-
-            session.add(entry)
-
-        session.commit()
-
-        session.refresh(transaction)
-
-        return transaction
+    return transaction

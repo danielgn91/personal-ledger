@@ -35,19 +35,30 @@ def ledger_db(engine):
 
     return TestLedgerDB()
 
+@pytest.fixture
+def session(ledger_db):
+    connection = ledger_db.engine.connect()
+    transaction = connection.begin()
+    session = Session(bind=connection)
+
+    yield session
+
+    session.close()
+    transaction.rollback()
+    connection.close()
 
 # -------------------------
 # ACCOUNTS FIXTURES
 # -------------------------
 
 @pytest.fixture
-def accounts(ledger_db):
+def accounts(session):
     """
     Creates a minimal chart of accounts for testing.
     """
 
     assets_root = create_account(
-        ledger_db,
+        session,
         code="1",
         name="Assets",
         account_type=AccountType.ASSET,
@@ -56,7 +67,7 @@ def accounts(ledger_db):
     )
 
     liabilities_root = create_account(
-        ledger_db,
+        session,
         code="2",
         name="Liabilities",
         account_type=AccountType.LIABILITY,
@@ -65,7 +76,7 @@ def accounts(ledger_db):
     )
 
     revenue_root = create_account(
-        ledger_db,
+        session,
         code="4",
         name="Revenue",
         account_type=AccountType.REVENUE,
@@ -74,7 +85,7 @@ def accounts(ledger_db):
     )
 
     expense_root = create_account(
-        ledger_db,
+        session,
         code="5",
         name="Expenses",
         account_type=AccountType.EXPENSE,
@@ -83,7 +94,7 @@ def accounts(ledger_db):
     )
 
     cash = create_account(
-        ledger_db,
+        session,
         code="1.1.01",
         name="Cash",
         account_type=AccountType.ASSET,
@@ -92,7 +103,7 @@ def accounts(ledger_db):
     )
 
     revenue = create_account(
-        ledger_db,
+        session,
         code="4.1.01",
         name="Revenue",
         account_type=AccountType.REVENUE,
@@ -101,7 +112,7 @@ def accounts(ledger_db):
     )
 
     expense = create_account(
-        ledger_db,
+        session,
         code="5.1.01",
         name="Expense",
         account_type=AccountType.EXPENSE,
@@ -110,7 +121,7 @@ def accounts(ledger_db):
     )
 
     non_postable = create_account(
-        ledger_db,
+        session,
         code="3.3.01",
         name="Non-postable",
         account_type=AccountType.EQUITY,
@@ -119,7 +130,7 @@ def accounts(ledger_db):
     )
 
     inactive = create_account(
-        ledger_db,
+        session,
         code="2.3.01",
         name="Inactive Liability",
         account_type=AccountType.LIABILITY,

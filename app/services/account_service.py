@@ -1,7 +1,5 @@
-from app.database import LedgerDatabase
 from app.models import Account, AccountType, NormalBalance
-from sqlmodel import select, Session
-from app.repositories.account_repository import get_account_by_id
+from sqlmodel import Session
 
 class InvalidAccountError(Exception):
     pass
@@ -22,7 +20,7 @@ def _is_descendant_or_self(
         if current_id == ancestor_id:
             return True
 
-        current = get_account_by_id(session, current_id)
+        current = session.get(Account, current_id)
 
         current_id = (
             current.parent_id
@@ -39,7 +37,7 @@ def validate_parent_account(
         parent_id: int | None) -> None:
     if parent_id is not None:
             
-            parent_account = get_account_by_id(session, parent_id)
+            parent_account = session.get(Account, parent_id)
 
             if parent_account is None:
                 raise InvalidAccountError("Parent Account does not exist")
@@ -53,7 +51,7 @@ def validate_parent_account(
 
 
 def create_account(
-    ledger_db: LedgerDatabase,
+    session: Session,
     code: str,
     name: str,
     account_type: AccountType,
@@ -66,57 +64,43 @@ def create_account(
     Create and persist an account.
     """
 
-    with ledger_db.get_session() as session:
+    account = Account(
+        code=code,
+        name=name,
+        account_type=account_type,
+        normal_balance=normal_balance,
+        parent_id=parent_id,
+        is_postable=is_postable,
+        is_active=is_active,
+    )
 
-        account = Account(
-            code=code,
-            name=name,
-            account_type=account_type,
-            normal_balance=normal_balance,
-            parent_id=parent_id,
-            is_postable=is_postable,
-            is_active=is_active,
-        )
+    validate_parent_account(session, None, parent_id)
 
-        validate_parent_account(session, None, parent_id)
+    session.add(account)
+    session.flush()
+    #session.commit()
 
-        session.add(account)
-        session.commit()
+    #session.refresh(account)
 
-        session.refresh(account)
+    return account
 
-        return account
-
-
-def get_account(
-    ledger_db: LedgerDatabase,
-    account_id: int,
-) -> Account | None:
-    """
-    Return an account by ID.
-    """
-
-    with ledger_db.get_session() as session:
-        return get_account_by_id(session, account_id)
 
 def change_account_parent(
-        ledger_db: LedgerDatabase,
+        session: Session,
         account_id: int,
         new_parent_id: int | None,
 ) -> Account:
     
-    with ledger_db.get_session() as session:
+    account = session.get(Account, account_id)
 
-        account = get_account_by_id(session, account_id)
+    if account is None:
+        raise InvalidAccountError("Account does not exist")
+    
+    validate_parent_account(session, account_id, new_parent_id)
+    
+    account.parent_id = new_parent_id
 
-        if account is None:
-            raise InvalidAccountError("Account does not exist")
-        
-        validate_parent_account(session, account_id, new_parent_id)
-        
-        account.parent_id = new_parent_id
+    #session.commit()
+    #session.refresh(account)
 
-        session.commit()
-        session.refresh(account)
-
-        return account
+    return account

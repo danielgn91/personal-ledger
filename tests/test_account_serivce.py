@@ -10,10 +10,10 @@ from app.services.account_service import (
 )
 
 
-def test_create_account(ledger_db):
+def test_create_account(session):
 
     acc = create_account(
-        ledger_db,
+        session,
         code="1.1.01",
         name="Cash",
         account_type=AccountType.ASSET,
@@ -24,7 +24,7 @@ def test_create_account(ledger_db):
     assert acc.name == "Cash"
 
 
-def test_invalid_parent(ledger_db):
+def test_invalid_parent(session):
 
     with pytest.raises(
         InvalidAccountError,
@@ -32,7 +32,7 @@ def test_invalid_parent(ledger_db):
     ):
 
         create_account(
-            ledger_db,
+            session,
             code="1.1.02",
             name="Invalid",
             account_type=AccountType.ASSET,
@@ -41,7 +41,7 @@ def test_invalid_parent(ledger_db):
         )
 
 
-def test_parent_postable(accounts, ledger_db):
+def test_parent_postable(accounts, session):
 
     parent = accounts["cash"]
 
@@ -51,7 +51,7 @@ def test_parent_postable(accounts, ledger_db):
     ):
 
         create_account(
-            ledger_db,
+            session,
             code="1.1.02",
             name="Child",
             account_type=AccountType.ASSET,
@@ -60,13 +60,13 @@ def test_parent_postable(accounts, ledger_db):
         )
 
 
-def test_change_account_parent(accounts, ledger_db):
+def test_change_account_parent(accounts, session):
 
     cash = accounts["cash"]
     liabilities_root = accounts["liabilities_root"]
 
     updated = change_account_parent(
-        ledger_db,
+        session,
         cash.id,
         liabilities_root.id,
     )
@@ -74,12 +74,12 @@ def test_change_account_parent(accounts, ledger_db):
     assert updated.parent_id == liabilities_root.id
 
 
-def test_change_account_parent_to_root(accounts, ledger_db):
+def test_change_account_parent_to_root(accounts, session):
 
     cash = accounts["cash"]
 
     updated = change_account_parent(
-        ledger_db,
+        session,
         cash.id,
         None,
     )
@@ -87,7 +87,7 @@ def test_change_account_parent_to_root(accounts, ledger_db):
     assert updated.parent_id is None
 
 
-def test_change_account_parent_to_self(accounts, ledger_db):
+def test_change_account_parent_to_self(accounts, session):
 
     assets_root = accounts["assets_root"]
 
@@ -97,16 +97,16 @@ def test_change_account_parent_to_self(accounts, ledger_db):
     ):
 
         change_account_parent(
-            ledger_db,
+            session,
             assets_root.id,
             assets_root.id,
         )
 
 
-def test_change_account_parent_to_descendant(ledger_db):
+def test_change_account_parent_to_descendant(session):
 
     root = create_account(
-        ledger_db,
+        session,
         code="10",
         name="Root",
         account_type=AccountType.ASSET,
@@ -115,7 +115,7 @@ def test_change_account_parent_to_descendant(ledger_db):
     )
 
     child = create_account(
-        ledger_db,
+        session,
         code="10.1",
         name="Child",
         account_type=AccountType.ASSET,
@@ -130,16 +130,16 @@ def test_change_account_parent_to_descendant(ledger_db):
     ):
 
         change_account_parent(
-            ledger_db,
+            session,
             root.id,
             child.id,
         )
 
 
-def test_change_account_parent_to_nested_descendant(ledger_db):
+def test_change_account_parent_to_nested_descendant(session):
 
     root = create_account(
-        ledger_db,
+        session,
         code="20",
         name="Root",
         account_type=AccountType.ASSET,
@@ -148,7 +148,7 @@ def test_change_account_parent_to_nested_descendant(ledger_db):
     )
 
     child = create_account(
-        ledger_db,
+        session,
         code="20.1",
         name="Child",
         account_type=AccountType.ASSET,
@@ -158,7 +158,7 @@ def test_change_account_parent_to_nested_descendant(ledger_db):
     )
 
     grandchild = create_account(
-        ledger_db,
+        session,
         code="20.1.1",
         name="Grandchild",
         account_type=AccountType.ASSET,
@@ -173,7 +173,7 @@ def test_change_account_parent_to_nested_descendant(ledger_db):
     ):
 
         change_account_parent(
-            ledger_db,
+            session,
             root.id,
             grandchild.id,
         )
