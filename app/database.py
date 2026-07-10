@@ -25,3 +25,11 @@ class LedgerDatabase:
         """
 
         return Session(self.engine)
+    
+    @classmethod
+    def create(cls, db_path: str):
+
+        db = cls(db_path)
+        db.create_tables()
+
+        return db
