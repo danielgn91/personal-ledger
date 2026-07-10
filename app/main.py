@@ -1,6 +1,10 @@
-from app.database import LedgerDatabase
+from nicegui import ui
+import app.ui.main
 
-db = LedgerDatabase("data/test_ledger.db")
-db.create_tables()
 
-print("Database initialized.")
+
+ui.run(
+    title="Personal Ledger",
+    host="127.0.0.1",
+    port=8000,
+)
