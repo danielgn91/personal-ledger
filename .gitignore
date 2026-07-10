@@ -10,3 +10,4 @@ __pycache__/
 exports/
 scripts/
 .pytest_cache/
+data/local/
