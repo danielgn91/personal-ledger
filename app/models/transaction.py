@@ -45,6 +45,10 @@ class Transaction(SQLModel, table=True):
         description="Timestamp indicating when the transaction was created."
     )
 
+    posted_at: datetime | None = Field(
+        description="Timestamp indicating when the transaction was posted."
+    )
+
     status: TransactionStatus = Field(
-        default=TransactionStatus.POSTED
+        default=TransactionStatus.PLANNED
     )
