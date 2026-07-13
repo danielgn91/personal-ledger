@@ -41,20 +41,38 @@ Examples:
 # Entity Overview
 
 ```text
-Transaction
-    |
-    | 1:N
-    v
-Entry ---- N:1 ---- Account
-                    |
-                    | N:M
-                    v
-                   Tag
+Ledger
+ |
+ +-- Account
+ |
+ +-- Transaction
+ |       |
+ |       +-- Entry
+ |
+ +-- Tag
+
+Entry <----> Tag
 ```
 
 ---
 
 # Tables
+
+
+---
+
+## Ledger
+
+Represents a set of financial data
+
+### Fields
+
+| Field | Type | Description |
+|---|---|---|
+| id | TEXT | Primary key |
+| name | TEXT | Ledger name |
+| created_at | DATETIME | creation timestamp |
+| updated_at |DATETIME| last update timestamp|
 
 ---
 
@@ -72,14 +90,18 @@ Hierarchy is defined using `parent_id`.
 
 | Field | Type | Description |
 |---|---|---|
-| id | INTEGER | Primary key |
-| parent_id | INTEGER nullable | Parent account reference |
+| id | TEXT | Primary key |
+| parent_id | TEXT nullable | Parent account reference |
+| ledger_id | TEXT | Owning ledger |
 | code | TEXT | Human-readable account code |
 | name | TEXT | Account name |
 | account_type | TEXT | asset, liability, equity, revenue, expense |
 | normal_balance | TEXT | debit or credit |
 | is_postable | BOOLEAN | Can receive entries directly |
 | is_active | BOOLEAN | Soft activation state |
+| created_at | DATETIME | creation timestamp |
+| updated_at | DATETIME | last update timestamp |
+| deleted_at | DATETIME nullable | deletion timestamp|
 
 ---
 
@@ -96,11 +118,15 @@ Examples:
 
 | Field | Type | Description |
 |---|---|---|
-| id | INTEGER | Primary key |
+| id | TEXT | Primary key |
+| ledger_id | TEXT | Owning ledger |
 | transaction_date | DATE | Competence/accounting date |
 | description | TEXT | Human-readable description |
 | status | TEXT | planned, posted, cancelled |
 | created_at | DATETIME | Creation timestamp |
+| posted_at | DATETIME | Posting timestamp |
+| updated_at | DATETIME | last update timestamp |
+| deleted_at | DATETIME nullable | deletion timestamp |
 
 ---
 Transactions have a lifecycle status:
@@ -127,11 +153,14 @@ Each entry affects exactly one account.
 
 | Field | Type | Description |
 |---|---|---|
-| id | INTEGER | Primary key |
-| transaction_id | INTEGER | Parent transaction |
-| account_id | INTEGER | Affected account |
+| id | TEXT | Primary key |
+| transaction_id | TEXT | Parent transaction |
+| account_id | TEXT | Affected account |
 | amount | INTEGER | Signed amount in cents |
 | description | TEXT nullable | Optional line description |
+|created_at | DATETIME | creation timestamp |
+| updated_at | DATETIME | last update timestamp |
+| deleted_at | DATETIME nullable | deletion timestamp |
 
 ---
 
@@ -145,32 +174,45 @@ Tags are intentionally separated from the chart of accounts structure.
 
 | Field | Type | Description |
 |---|---|---|
-| id | INTEGER | Primary key |
-| name | TEXT | Unique normalized tag name |
+| id | TEXT | Primary key |
+| ledger_id | TEXT | Owning ledger |
+| name | TEXT | normalized tag name |
 | is_active | BOOLEAN | Soft activation state |
+| created_at | DATETIME | creation timestamp |
+| updated_at | DATETIME | last update timestamp |
+| deleted_at | DATETIME nullable | deletion timestamp |
+
+Unique(ledger_id, name)
 
 ---
 
-## AccountTag
+## EntryTag
 
-Many-to-many relationship between accounts and tags.
+Many-to-many relationship between Entries and tags.
 
 ### Fields
 
 | Field | Type | Description |
 |---|---|---|
-| account_id | INTEGER | Referenced account |
-| tag_id | INTEGER | Referenced tag |
+| entry_id | TEXT | Referenced entry |
+| tag_id | TEXT | Referenced tag |
 
 Composite primary key:
 
 ```text
-(account_id, tag_id)
+(entry_id, tag_id)
 ```
 
 ---
 
 # Design Decisions
+
+## Ledger Ownership
+
+Accounts, Transactions and Tags belong to exactly one Ledger.
+
+Entries belong indirectly through their Transaction.
+
 
 ## Integer Monetary Storage
 
@@ -195,18 +237,19 @@ affect real balances and accounting reports.
 
 ---
 
+## Entry Lifecycle
+
+Entries are mutable while transactions are being edited.
+
+Posted transaction entries should not be deleted.
+Corrections should be performed by cancelling or reversing transactions.
+
+
+
 ## Analytical Tags
 
 Tags provide analytical categorization without requiring
 an excessively granular chart of accounts.
-
----
-
-## ORM Strategy
-
-The current implementation intentionally avoids advanced ORM
-relationships and abstractions during the MVP phase
-to prioritize simplicity and transparency.
 
 ---
 

@@ -21,10 +21,9 @@ and robust accounting foundations.
 
 ## Stack
 
-- Python
 - SQLite
-- SQLModel
-- NiceGUI
+- Dart
+- Flutter
 
 ---
 
