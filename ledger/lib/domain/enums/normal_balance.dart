@@ -1,0 +1,4 @@
+enum NormalBalance {
+  debit,
+  credit,
+}
