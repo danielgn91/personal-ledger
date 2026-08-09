@@ -1,15 +1,13 @@
 import 'package:drift/drift.dart';
 
-class Entries extends Table {
+class TagTypes extends Table {
   TextColumn get id => text()();
 
-  TextColumn get transactionId => text()();
+  TextColumn get ledgerId => text()();
 
-  TextColumn get accountId => text()();
+  TextColumn get name => text()();
 
-  IntColumn get amount => integer()();
-
-  TextColumn get description => text().nullable()();
+  BoolColumn get isActive => boolean()();
 
   DateTimeColumn get createdAt => dateTime()();
 

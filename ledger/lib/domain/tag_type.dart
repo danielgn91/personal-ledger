@@ -1,8 +1,7 @@
-class Tag {
+class TagType {
   final String id;
   final String ledgerId;
-  
-  final String? tagTypeId;
+
   final String name;
 
   final bool isActive;
@@ -11,10 +10,9 @@ class Tag {
   final DateTime updatedAt;
   final DateTime? deletedAt;
 
-  const Tag({
+  const TagType({
     required this.id,
     required this.ledgerId,
-    required this.tagTypeId,
     required this.name,
     required this.isActive,
     required this.createdAt,
