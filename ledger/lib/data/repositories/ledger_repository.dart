@@ -23,7 +23,7 @@ class LedgerRepository {
   Future<List<domain.Ledger>> findAll() async {
     final rows = await database.select(database.ledgers).get();
 
-    return rows.map<domain.Ledger>(_toDomain).toList();
+    return rows.map(_toDomain).toList();
   }
 
   Future<void> insert(domain.Ledger ledger) async {

@@ -1,7 +1,10 @@
-import '../domain/ledger.dart';
+import 'package:uuid/uuid.dart';
+
+import '../data/database/database.dart';
+import '../data/repositories/ledger_repository.dart';
+import '../domain/ledger.dart' as domain;
 
 enum LedgerError {
-  deleted,
   invalidName,
 }
 
@@ -9,39 +12,59 @@ class LedgerException implements Exception {
   final LedgerError error;
 
   const LedgerException(this.error);
+
+  @override
+  String toString() {
+    return 'LedgerException: $error';
+  }
 }
 
 class LedgerService {
-  const LedgerService();
+  LedgerService(AppDatabase database)
+      : _repository = LedgerRepository(database);
 
-  Ledger create({
-    required String id,
+  final LedgerRepository _repository;
+  static const Uuid _uuid = Uuid();
+
+  Future<List<domain.Ledger>> findAll() {
+    return _repository.findAll();
+  }
+
+  Future<domain.Ledger> create({
     required String name,
-    required DateTime now,
-  }) {
+  }) async {
     _validateName(name);
 
-    return Ledger(
-      id: id,
+    final now = DateTime.now();
+
+    final ledger = domain.Ledger(
+      id: _uuid.v4(),
       name: name.trim(),
       createdAt: now,
       updatedAt: now,
     );
+
+    await _repository.insert(ledger);
+
+    return ledger;
   }
 
-  Ledger update({
+  Future<domain.Ledger> update({
     required Ledger ledger,
     required String name,
-    required DateTime now,
-  }) {
+  }) async {
     _validateName(name);
 
-    return Ledger(
+    final updatedLedger = domain.Ledger(
       id: ledger.id,
       name: name.trim(),
       createdAt: ledger.createdAt,
-      updatedAt: now,
+      updatedAt: DateTime.now(),
     );
+
+    await _repository.update(updatedLedger);
+
+    return updatedLedger;
   }
 
   void _validateName(String name) {
